@@ -1,0 +1,58 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          PersonalFirewall
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+### END INIT INFO
+
+# Lancement du script de Firewall
+RETVAL=0
+# Fonction pour le lancement du firewall
+start() {
+		echo -n "Démarrage du pare_feu : "
+                /etc/fw/fw.sh
+		RETVAL=$?
+		if [ $RETVAL -eq 0 ]; then {
+			touch /var/lock/firewall
+			echo "OK"
+		}
+		else
+			echo "Refus démarrage"
+		fi
+}
+# Fonction pour arrêter le firewall
+stop() {
+		echo -n "Arrêt du pare-feu : "
+		/etc/fw/flushfw.sh
+		RETVAL=$?
+		if [ $RETVAL -eq 0 ]; then {
+			rm -f /var/lock/firewall
+			echo "OK"
+		}
+		else
+			echo "Refus arrêt"
+		fi
+}
+case $1 in
+		start)
+			start
+			;;
+		stop)
+			stop
+			;;
+		restart)
+			stop
+			start
+			;;
+		status)
+			/sbin/iptables -L
+			/sbin/iptables -t nat -L
+			RETVAL=$?
+			;;
+		*)
+		echo "Usage: firewall {start|stop|restart|status}"
+			RETVAL=1
+esac
+exit $RETVAL
